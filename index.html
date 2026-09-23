@@ -4,7 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manager Live Dashboard - Connected Mode</title>
+
+  <!-- ================================================================= -->
+  <!-- 🎨 SECTION 1: STYLES & VISUAL DESIGNS (<style>)                  -->
+  <!-- Describes how everything looks (colors, fonts, cards, popups)    -->
+  <!-- ================================================================= -->
   <style>
+    /* ----------------------------------------------------------------- */
+    /* 1A. General Setup & Color Theme Variables                         */
+    /* ----------------------------------------------------------------- */
     :root {
       --bg-color: #1800ad;
       --card-open: #FAF9F6;
@@ -21,6 +29,10 @@
       padding: 16px;
       margin: 0;
     }
+
+    /* ----------------------------------------------------------------- */
+    /* 1B. Dashboard Layout & Header Styles                              */
+    /* ----------------------------------------------------------------- */
     .dashboard-container {
       background: #FAF9F6;
       border-radius: 20px;
@@ -42,6 +54,10 @@
       text-transform: uppercase;
     }
     .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 380px; margin: 0 auto; }
+
+    /* ----------------------------------------------------------------- */
+    /* 1C. Table Card Styles & State Colors (Open, Active, Expired)      */
+    /* ----------------------------------------------------------------- */
     .table-card {
       background: #FFFFFF;
       border-radius: 12px;
@@ -67,6 +83,10 @@
     .bill-faded { opacity: 0.3; filter: grayscale(100%); }
     .bill-approved { opacity: 1; filter: drop-shadow(0 0 4px #2E7D32); }
     .timer-display { font-size: 0.95rem; margin-top: 8px; color: var(--text-muted); font-weight: bold; font-family: monospace; }
+
+    /* ----------------------------------------------------------------- */
+    /* 1D. Details Modal (Popup Window) & Button Styles                  */
+    /* ----------------------------------------------------------------- */
     .modal {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center; padding: 20px; z-index: 1000;
@@ -82,6 +102,10 @@
     .verify-badge { display: inline-block; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; margin-top: 8px; text-align: center; width: 100%; box-sizing: border-box; }
     .verified { background: #2E7D32; color: #FFFFFF; }
     .unverified { background: #D32F2F; color: #FFFFFF; }
+
+    /* ----------------------------------------------------------------- */
+    /* 1E. PIN Screen & Sound Control Panel Styles                       */
+    /* ----------------------------------------------------------------- */
     #pinOverlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 2000;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -94,6 +118,14 @@
 </head>
 <body>
 
+  <!-- ================================================================= -->
+  <!-- 🏗️ SECTION 2: PAGE STRUCTURE & HTML ELEMENTS                    -->
+  <!-- Visual building blocks of the app layout                         -->
+  <!-- ================================================================= -->
+
+  <!-- ----------------------------------------------------------------- -->
+  <!-- 2A. PIN Lock Screen Overlay                                       -->
+  <!-- ----------------------------------------------------------------- -->
   <div id="pinOverlay">
     <div class="pin-box">
       <h2 style="margin-top:0; color:#1800ad; font-size: 1.2rem;">Manager Access</h2>
@@ -104,6 +136,9 @@
     </div>
   </div>
 
+  <!-- ----------------------------------------------------------------- -->
+  <!-- 2B. Main Dashboard Area & Audio Controls                         -->
+  <!-- ----------------------------------------------------------------- -->
   <div class="dashboard-container">
     <h1>Counter Dashboard</h1>
     <div id="tableGrid" class="grid">Connecting...</div>
@@ -118,6 +153,9 @@
     </div>
   </div>
 
+  <!-- ----------------------------------------------------------------- -->
+  <!-- 2C. Order Details Modal (Popup Window)                            -->
+  <!-- ----------------------------------------------------------------- -->
   <div id="detailsModal" class="modal">
     <div class="modal-content">
       <h2 id="modalTitle" style="margin-top:0;">Table X</h2>
@@ -135,7 +173,14 @@
     </div>
   </div>
 
+  <!-- ================================================================= -->
+  <!-- ⚙️ SECTION 3: APPLICATION LOGIC (<script>)                       -->
+  <!-- How the app works, connects to database, handles clicks & timers  -->
+  <!-- ================================================================= -->
   <script>
+    /* ----------------------------------------------------------------- */
+    /* 3A. Key Settings & Global Variables                               */
+    /* ----------------------------------------------------------------- */
     const MANAGER_PIN = "0070"; 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjQtbuew_onZqKqSEO49KeMQwIwm-t5VBwwSC1l8XcBE-7bWcjcnUDS4Jv9lNHgC2HbQ/exec"; 
 
@@ -145,6 +190,9 @@
     let audioCtx = null;
     let alertVolume = 0.35; 
 
+    /* ----------------------------------------------------------------- */
+    /* 3B. Audio Functions (Volume & Sound Alerts)                       */
+    /* ----------------------------------------------------------------- */
     function updateVolume(val) {
       document.getElementById('volVal').innerText = val;
       alertVolume = val / 100;
@@ -171,6 +219,9 @@
       } catch (e) { console.warn("Audio error:", e); }
     }
 
+    /* ----------------------------------------------------------------- */
+    /* 3C. Security & PIN Access Handling                                */
+    /* ----------------------------------------------------------------- */
     window.addEventListener('DOMContentLoaded', () => {
       const pinInput = document.getElementById('pinInput');
       pinInput.focus();
@@ -189,6 +240,9 @@
       }
     }
 
+    /* ----------------------------------------------------------------- */
+    /* 3D. Server Data Syncing (Fetching Latest Info)                    */
+    /* ----------------------------------------------------------------- */
     async function fetchDashboardData() {
       if (!APPS_SCRIPT_URL) return;
 
@@ -233,6 +287,9 @@
       return 0;
     }
 
+    /* ----------------------------------------------------------------- */
+    /* 3E. Grid UI Rendering & Live Timer Updates                        */
+    /* ----------------------------------------------------------------- */
     function renderGrid() {
       const grid = document.getElementById('tableGrid');
       grid.innerHTML = '';
@@ -273,6 +330,7 @@
       });
     }
 
+    // Every second count down timer tick
     setInterval(() => {
       Object.keys(activeData).forEach(tNum => {
         const t = activeData[tNum];
@@ -286,6 +344,9 @@
       });
     }, 1000);
 
+    /* ----------------------------------------------------------------- */
+    /* 3F. Table Details Popup Window Actions                            */
+    /* ----------------------------------------------------------------- */
     function openModal(tNum) {
       currentSelectedTable = tNum;
       updateModalContent(tNum);
@@ -328,6 +389,9 @@
       }
     }
 
+    /* ----------------------------------------------------------------- */
+    /* 3G. Payment Status & Modal Controls                               */
+    /* ----------------------------------------------------------------- */
     function togglePaymentStatus() {
       if (!currentSelectedTable || !activeData[currentSelectedTable]) return;
 
