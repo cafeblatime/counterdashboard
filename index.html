@@ -173,22 +173,29 @@
         <span id="volVal">35</span>
       </label>
       <input type="range" id="volumeSlider" min="0" max="100" value="35" style="width:100%; margin-top:5px;" oninput="updateVolume(this.value)">
-      <button class="btn-action btn-pay" style="margin-top: 8px; padding: 6px;" onclick="playAlertSound()">Test Sound 🔊</button>
+      <button class="btn-action btn-pay" style="margin-top: 8px; padding: 6px;" onclick="playAlertSound()">Test</button>
     </div>
   </div>
 
-  <!-- ----------------------------------------------------------------- -->
+ <!-- ----------------------------------------------------------------- -->
   <!-- 2C. Order Details Modal (Popup Window)                            -->
   <!-- ----------------------------------------------------------------- -->
   <div id="detailsModal" class="modal">
     <div class="modal-content">
-      <h2 id="modalTitle" style="margin-top:0;">Table X</h2>
+      <h2 id="modalTitle" style="margin-top:0;">Table X Details</h2>
       <hr style="border-color: #E2E8F0;">
       
-      <p><strong>Order Summary:</strong></p>
-      <ul id="modalOrders" style="padding-left: 20px; color: var(--text-muted); font-size: 0.95rem;"></ul>
+      <!-- Component 1: Ordered Items -->
+      <p style="margin-bottom: 4px;"><strong>1. Ordered Items:</strong></p>
+      <ul id="modalOrders" style="padding-left: 20px; color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;"></ul>
 
-      <p><strong>Total Sum:</strong> <span id="modalTotal">0.00</span> DKK</p>
+      <!-- Component 2: Focus Time -->
+      <p style="margin-top: 12px; margin-bottom: 8px;"><strong>2. Session Duration:</strong></p>
+      <div style="background: #E2E8F0; padding: 10px; border-radius: 8px; font-weight: bold; color: #1800ad; font-size: 0.9rem;">
+        ⏱️ Focus time 45 min
+      </div>
+
+      <p style="margin-top: 16px;"><strong>Total Sum:</strong> <span id="modalTotal">0.00</span> DKK</p>
       
       <div id="modalVerify" class="verify-badge">Checking...</div>
 
@@ -278,11 +285,20 @@
           let hasNewActiveTable = false;
 
           Object.keys(result.tables).forEach(tNum => {
-            result.tables[tNum].secondsLeft = parseEndTimeToSeconds(result.tables[tNum].endTime);
+            const incoming = result.tables[tNum];
+            incoming.secondsLeft = parseEndTimeToSeconds(incoming.endTime);
 
-            const oldStatus = activeData[tNum] ? activeData[tNum].status.toLowerCase() : 'open';
-            const newStatus = result.tables[tNum].status.toLowerCase();
+            const oldTable = activeData[tNum];
+            const oldStatus = oldTable ? oldTable.status.toLowerCase() : 'open';
+            const newStatus = incoming.status.toLowerCase();
             
+            // Retain local paid status during active/expiring/expired cycles
+            if (newStatus !== 'open' && oldTable && oldTable.isPaid) {
+              incoming.isPaid = true;
+            } else if (newStatus === 'open') {
+              incoming.isPaid = false; // Reset once back to open
+            }
+
             if (oldStatus === 'open' && (newStatus === 'active' || newStatus === 'expiring')) {
               hasNewActiveTable = true;
             }
@@ -377,14 +393,19 @@
       document.getElementById('detailsModal').style.display = 'flex';
     }
 
-    function updateModalContent(tNum) {
+   function updateModalContent(tNum) {
       const t = activeData[tNum];
       if (!t) return;
 
       document.getElementById('modalTitle').innerText = `Table ${t.table} Details`;
+      
+      // Component 1: Items Ordered
       const ordersList = document.getElementById('modalOrders');
-      ordersList.innerHTML = t.orders.length > 0 ? t.orders.map(item => `<li>${item}</li>`).join('') : '<li>No items recorded</li>';
-      document.getElementById('modalTotal').innerText = t.totalSum.toFixed(2);
+      ordersList.innerHTML = (t.orders && t.orders.length > 0) 
+        ? t.orders.map(item => `<li>${item}</li>`).join('') 
+        : '<li>No items recorded</li>';
+        
+      document.getElementById('modalTotal').innerText = Number(t.totalSum || 0).toFixed(2);
 
       const verifyEl = document.getElementById('modalVerify');
       if (t.intervalCount > 0) {
