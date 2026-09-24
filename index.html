@@ -163,19 +163,14 @@
   <!-- ----------------------------------------------------------------- -->
   <!-- 2B. Main Dashboard Area & Audio Controls                         -->
   <!-- ----------------------------------------------------------------- -->
-  <div class="dashboard-container">
-    <h1>Counter Dashboard</h1>
-    <div id="tableGrid" class="grid">Connecting...</div>
-
-    <div class="audio-settings" id="audioSettingsPanel">
+ <div class="audio-settings" id="audioSettingsPanel">
       <label style="display:flex; justify-content:space-between; font-weight:bold;">
         <span>Alert Volume</span>
         <span id="volVal">35</span>
       </label>
       <input type="range" id="volumeSlider" min="0" max="100" value="35" style="width:100%; margin-top:5px;" oninput="updateVolume(this.value)">
-      <button class="btn-action btn-pay" style="margin-top: 8px; padding: 6px;" onclick="playAlertSound()">Test</button>
+      <button class="btn-action btn-test" style="margin-top: 8px; padding: 10px;" onclick="playAlertSound()">Test</button>
     </div>
-  </div>
 
  <!-- ----------------------------------------------------------------- -->
   <!-- 2C. Order Details Modal (Popup Window)                            -->
