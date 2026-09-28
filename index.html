@@ -306,15 +306,15 @@
             const oldStatus = oldTable ? oldTable.status.toLowerCase() : 'open';
             const newStatus = incoming.status.toLowerCase();
             
-            // Retain local paid status during active/expiring/expired cycles
-            if (newStatus !== 'open' && oldTable && oldTable.isPaid) {
+          // Retain paid status from localStorage or memory across page refreshes
+            const isPaidStored = localStorage.getItem('counter_paid_table_' + tNum) === 'true';
+
+            if (newStatus !== 'open' && (isPaidStored || (oldTable && oldTable.isPaid))) {
               incoming.isPaid = true;
+              localStorage.setItem('counter_paid_table_' + tNum, 'true');
             } else if (newStatus === 'open') {
               incoming.isPaid = false; // Reset once back to open
-            }
-
-            if (oldStatus === 'open' && (newStatus === 'active' || newStatus === 'expiring')) {
-              hasNewActiveTable = true;
+              localStorage.removeItem('counter_paid_table_' + tNum);
             }
           });
 
@@ -451,11 +451,20 @@
     /* ----------------------------------------------------------------- */
     /* 3G. Payment Status & Modal Controls                               */
     /* ----------------------------------------------------------------- */
-    function togglePaymentStatus() {
+   function togglePaymentStatus() {
       if (!currentSelectedTable || !activeData[currentSelectedTable]) return;
 
       const t = activeData[currentSelectedTable];
       t.isPaid = !t.isPaid;
+
+      // Sync paid status to localStorage for persistence across reloads
+      const paidKey = 'counter_paid_table_' + currentSelectedTable;
+      if (t.isPaid) {
+        localStorage.setItem(paidKey, 'true');
+      } else {
+        localStorage.removeItem(paidKey);
+      }
+
       updateModalPaidBtn();
       renderGrid();
 
