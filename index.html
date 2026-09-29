@@ -398,56 +398,67 @@
       });
     }, 1000);
 
-    /* ----------------------------------------------------------------- */
-    /* 3F. Table Details Popup Window Actions                            */
-    /* ----------------------------------------------------------------- */
-    function openModal(tNum) {
-      currentSelectedTable = tNum;
-      updateModalContent(tNum);
-      document.getElementById('detailsModal').style.display = 'flex';
-    }
+/* ----------------------------------------------------------------- */
+/* 3F. Table Details Popup Window Actions                            */
+/* ----------------------------------------------------------------- */
+function openModal(tNum) {
+  currentSelectedTable = tNum;
+  updateModalContent(tNum);
+  document.getElementById('detailsModal').style.display = 'flex';
+}
 
-   function updateModalContent(tNum) {
-      const t = activeData[tNum];
-      if (!t) return;
+function updateModalContent(tNum) {
+  const t = activeData[tNum];
+  if (!t) return;
 
-      document.getElementById('modalTitle').innerText = `Table ${t.table} Details`;
-      
-      // Component 1: Items Ordered
-      const ordersList = document.getElementById('modalOrders');
-      ordersList.innerHTML = (t.orders && t.orders.length > 0) 
-        ? t.orders.map(item => `<li>${item}</li>`).join('') 
-        : '<li>No items recorded</li>';
-        
-      document.getElementById('modalTotal').innerText = Number(t.totalSum || 0).toFixed(2);
+  document.getElementById('modalTitle').innerText = `Table ${t.table} Details`;
+  
+  // Component 1: Items Ordered
+  const ordersList = document.getElementById('modalOrders');
+  
+  // Parse '/' separated items from string or array format
+  let items = [];
+  if (typeof t.orders === 'string') {
+    items = t.orders.split('/');
+  } else if (Array.isArray(t.orders)) {
+    items = t.orders.flatMap(item => (typeof item === 'string' ? item.split('/') : item));
+  }
 
-      const verifyEl = document.getElementById('modalVerify');
-      if (t.intervalCount > 0) {
-        verifyEl.innerText = "Focus pass verified";
-        verifyEl.className = "verify-badge verified";
-      } else {
-        verifyEl.innerText = "Focus pass not verified";
-        verifyEl.className = "verify-badge unverified";
-      }
-      updateModalPaidBtn();
-    }
+  // Trim whitespace and exclude empty items
+  items = items.map(item => String(item).trim()).filter(item => item.length > 0);
 
-    function updateModalPaidBtn() {
-      const btn = document.getElementById('markPaidBtn');
-      if (!currentSelectedTable || !activeData[currentSelectedTable]) return;
+  ordersList.innerHTML = items.length > 0 
+    ? items.map(item => `<li>${item}</li>`).join('') 
+    : '<li>No items recorded</li>';
+    
+  document.getElementById('modalTotal').innerText = Number(t.totalSum || 0).toFixed(2);
 
-      const t = activeData[currentSelectedTable];
-      btn.style.display = t.status.toLowerCase() === 'open' ? 'none' : 'block';
+  const verifyEl = document.getElementById('modalVerify');
+  if (t.intervalCount > 0) {
+    verifyEl.innerText = "Focus pass verified";
+    verifyEl.className = "verify-badge verified";
+  } else {
+    verifyEl.innerText = "Focus pass not verified";
+    verifyEl.className = "verify-badge unverified";
+  }
+  updateModalPaidBtn();
+}
 
-      if (t.isPaid) {
-        btn.innerText = "✓ Paid & Approved";
-        btn.className = "btn-action btn-pay approved";
-      } else {
-        btn.innerText = "Mark as Paid";
-        btn.className = "btn-action btn-pay";
-      }
-    }
+function updateModalPaidBtn() {
+  const btn = document.getElementById('markPaidBtn');
+  if (!currentSelectedTable || !activeData[currentSelectedTable]) return;
 
+  const t = activeData[currentSelectedTable];
+  btn.style.display = t.status.toLowerCase() === 'open' ? 'none' : 'block';
+
+  if (t.isPaid) {
+    btn.innerText = "✓ Paid & Approved";
+    btn.className = "btn-action btn-pay approved";
+  } else {
+    btn.innerText = "Mark as Paid";
+    btn.className = "btn-action btn-pay";
+  }
+}
     /* ----------------------------------------------------------------- */
     /* 3G. Payment Status & Modal Controls                               */
     /* ----------------------------------------------------------------- */
